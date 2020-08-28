@@ -1,6 +1,9 @@
 /*
     'kitchenLight1_A' by Thurstan. PIR triggered LED strips.
-    Copyright (C) 2018  MTS Standish (Thurstan|mattKsp)
+    Copyright (C) 2020 MTS Standish (Thurstan|mattKsp)
+    
+    A does one side of the kitchen and B does the other side.
+    Each side has 2 LED strips above the units and lights below the units, operated seperately. 
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,40 +18,43 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    https://github.com/mattKsp/
+    https://github.com/mattThurstan/
 */
 
 //Board = WEMOS D1 Mini with ESP8266
-//http://wiki.keyestudio.com/index.php/Ks0052_keyestudio_PIR_Motion_Sensor   5v, 3v logic high
-
-#define DEBUG 1                               //comment/un-comment
-
-#define   MESH_SSID       "whateverYouLike"
-#define   MESH_PASSWORD   "somethingSneaky"
-#define   MESH_PORT       5555
 
 /*----------------------------libraries----------------------------*/
-#include <MT_BlinkStatusLED.h>
-//#include <painlessMesh.h>
-//#include <SimpleList.h>
-#include <FastLED.h>                          //WS2812B LED strip control and effects
+#include <MT_LightControlDefines.h>
+#include <EEPROM.h>                           // a few saved settings
+#include <painlessMesh.h>                     // https://github.com/gmag11/painlessMesh
+#include <FastLED.h>                          // WS2812B LED strip control and effects
+#include <NeoPixelBrightnessBus.h>            // NeoPixelBrightnessBus (just for ESP8266)- for brightness functions (instead of NeoPixelBus.h)
+
+/*----------------------------system----------------------------*/
+const String _progName = "kitchenLight1_A";
+const String _progVers = "0.1";               //init
+
+boolean DEBUG_GEN = false;                    // realtime serial debugging output - general
+boolean DEBUG_OVERLAY = false;                // show debug overlay on leds (eg. show segment endpoints, center, etc.)
+boolean DEBUG_MESHSYNC = false;               // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
+boolean DEBUG_COMMS = false;                  // realtime serial debugging output - comms
+boolean DEBUG_USERINPUT = false;              // realtime serial debugging output - user input
+
+boolean _firstTimeSetupDone = false;          // starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
+volatile boolean _onOff = false;              // this should init false, then get activated by input - on/off true/false
+bool shouldSaveSettings = false;              // flag for saving data
+bool runonce = true;                          // flag for sending states when first mesh conection
+//const int _mainLoopDelay = 0;               // just in case  - using FastLED.delay instead..
+
+bool _isBreathing = false;                    // toggle for breath
+bool _isBreathOverlaid = false;               // toggle for whether breath is overlaid on top of modes
+bool _isBreathingSynced = false;              // breath sync local or global
 
 /*----------------------------D1 mini pins----------------------------*/
 const byte _ledDOut0Pin = 6;                  //DOut 0 -> LED strip 0 DIn
 const byte _ledDOut1Pin = 7;                  //DOut 1 -> LED strip 1 DIn
 const byte _pirPin = 10;                      //PIR sensor pin
 MT_BlinkStatusLED statusLED(13);              //setup status LED (internal) on pin 13
-
-/*----------------------------system----------------------------*/
-const String _progName = "kitchenLight1_A";
-const String _progVers = "0.1";               //init
-//const int _mainLoopDelay = 0;               //just in case  - using FastLED.delay instead..
-//boolean _firstTimeSetupDone = false;          //starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
-volatile boolean _onOff = false;              //this should init false, then get activated by input - on/off true/false
-
-/*----------------------------comms----------------------------*/
-//painlessMesh  mesh;
-//SimpleList<uint32_t> nodes;
 
 /*----------------------------modes----------------------------*/
 const int _modeNum = 9;
@@ -89,6 +95,9 @@ CRGB leds[_ledNum];                           //global RGB array
 //#define TEMPERATURE_1 StandardFluorescent
 //#define TEMPERATURE_2 CoolWhiteFluorescent
 //int _colorTempCur = 1;                        //current colour temperature       ???
+
+/*----------------------------Mesh----------------------------*/
+
 
 /*----------------------------MAIN----------------------------*/
 void setup() {
@@ -138,4 +147,3 @@ void loop() {
   //
   //delay(_mainLoopDelay);  //using FastLED.delay instead..
 }
-
