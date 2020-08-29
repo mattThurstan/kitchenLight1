@@ -34,13 +34,13 @@
 
 /*----------------------------system---------------------------*/
 const String _progName = "kitchenLight1_Mesh";
-const String _progVers = "0.1";                   // init
+const String _progVers = "0.101";                 // tweaks
 
-boolean DEBUG_GEN = false;                        // realtime serial debugging output - general
+boolean DEBUG_GEN = true;                        // realtime serial debugging output - general
 boolean DEBUG_OVERLAY = false;                    // show debug overlay on leds (eg. show segment endpoints, center, etc.)
 boolean DEBUG_MESHSYNC = false;                   // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
-boolean DEBUG_COMMS = false;                      // realtime serial debugging output - comms
-boolean DEBUG_USERINPUT = false;                  // realtime serial debugging output - user input
+boolean DEBUG_COMMS = true;                      // realtime serial debugging output - comms
+boolean DEBUG_USERINPUT = true;                  // realtime serial debugging output - user input
 
 boolean _firstTimeSetupDone = false;              // starts false
 bool _shouldSaveSettings = false;                 // flag for saving data
@@ -54,6 +54,9 @@ bool _topIsBreathOverlaid = false;                // toggle for whether breath i
 bool _topIsBreathingSynced = false;               // breath sync local or global
 // bottom lights
 volatile boolean _botOnOff = false;               // bottom lights on/off true/false - this should init false, then get activated by input
+bool _botIsBreathing = false;                     // toggle for breath
+bool _botIsBreathOverlaid = false;                // toggle for whether breath is overlaid on top of modes
+bool _botIsBreathingSynced = false;               // breath sync local or global
 
 /*----------------------------pins----------------------------*/
 const int _ledDOut0Pin = 4;                       // DOut 0 -> LED strip 0 DIn   - top right
@@ -98,7 +101,7 @@ u16 touch_status_flag[CHANNEL_NUM] = { 0 };       // u16 = unsigned short
 /*----------------------------LED-----------------------------*/
 // might limit power draw even further if add usb charge ports to the system
 // or use usb chips and change power draw if usb device attached and charging
-#define MAX_POWER_DRAW 5700                       // limit power draw to 5.7A at 5v (with 6A power supply this gives us a bit of head room for board, lights etc.)
+#define MAX_POWER_DRAW 3000                       // limit power draw to 5.7A at 5v (with 6A power supply this gives us a bit of head room for board, lights etc.)
 #define UPDATES_PER_SECOND 120                    // main loop FastLED show delay //100
 
 typedef struct {
@@ -174,7 +177,7 @@ uint32_t id = DEVICE_ID_BRIDGE1;
 
 void receivedCallback(uint32_t from, String &msg ) {
   if (DEBUG_COMMS) { Serial.printf("kitchenLight1_Mesh: Received from %u msg=%s\n", from, msg.c_str()); }
-//  receiveMessage(from, msg);
+  receiveMessage(from, msg);
 }
 
 void newConnectionCallback(uint32_t nodeId) {
@@ -238,13 +241,13 @@ void setup() {
 
 void loop() {
 
+  mesh.update();
+  
   if(_firstTimeSetupDone == false) {
     _firstTimeSetupDone = true;                   
     publishStatusAll(false);
     if (DEBUG_GEN) { Serial.print(F("firstTimeSetupDone  = true")); }
   }
-
-  mesh.update();
 
   loopUserInputs();                               // loop direct user input
   loopTopModes();                                 // loop top light modes

@@ -42,7 +42,7 @@ void receiveMessage(uint32_t from, String msg)
     else if (msgSub == "Effect") 
     { _topModeCur = 8; }
 
-    publishTopMode(true);
+//    publishTopMode(true);                   // bouncing back really badly!!!!
   }
   // top sub-modes
   else if (targetSub == "lights/top/mode/coltemp") {
@@ -57,7 +57,7 @@ void receiveMessage(uint32_t from, String msg)
   }
   else if (targetSub == "lights/top/mode/effect") {
     // 
-    publishTopEffect(true);
+    //publishTopEffect(true);
   }
   // publish top effect colours
   else if (targetSub == "lights/top/hue/cycle/set") {
@@ -107,7 +107,7 @@ void receiveMessage(uint32_t from, String msg)
     else if (msgSub == "Effect") 
     { _botModeCur = 8; }
 
-    publishBotMode(true);
+//    publishBotMode(true);                   // bouncing back really badly!!!!
   }
   // bottom sub-modes
   else if (targetSub == "lights/bot/mode/coltemp") {
@@ -122,7 +122,7 @@ void receiveMessage(uint32_t from, String msg)
   }
   else if (targetSub == "lights/bot/mode/effect") {
     // 
-    publishBotEffect(true);
+    //publishBotEffect(true);
   }
   // publish bottom effect colours
   else if (targetSub == "lights/bot/hue/cycle/set") {
@@ -200,7 +200,7 @@ void receiveMessage(uint32_t from, String msg)
     //publishLightsBreathXyzMode(false);
   }
   else if(targetSub == "debug/general/set") {
-    if (msgSub == LIGHTS_ON) { DEBUG_GEN = true; Serial.println("got here"); } 
+    if (msgSub == LIGHTS_ON) { DEBUG_GEN = true; } 
     else if (msgSub == LIGHTS_OFF) { DEBUG_GEN = false; }
     publishDebugGeneralState(false);
   }

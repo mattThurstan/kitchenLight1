@@ -128,7 +128,8 @@ void touch3pressed() {                        // touch sensor 3 - top lights sub
   if (_topModeCur == 4) { 
     cycleTopColorTemp();
     publishTopColorTemp(true); 
-  } else if (_topModeCur == 8) { }
+  } else if (_topModeCur == 8) {
+  }
 }
 void touch4pressed() {                        // touch sensor 4 - top lights brightness up
   increaseTopBrightness();
@@ -154,8 +155,11 @@ void touch8pressed() {                        // touch sensor 8 - bot lights mod
 }
 void touch9pressed() {                        // touch sensor 9 - bot lights sub-mode cycle
   // sub-modes eg. cycle temperature modes (not implemented yet)
-  cycleBotColorTemp(); 
-  publishBotColorTemp(true);
+  if (_botModeCur == 4) { 
+    cycleBotColorTemp();
+    publishBotColorTemp(true); 
+  } else if (_botModeCur == 8) {
+  }
 }
 void touch10pressed() {                        // touch sensor 10 - bot lights brightness up
   increaseBotBrightness();
