@@ -11,3 +11,13 @@ void setupMesh()
   mesh.onChangedConnections(&changedConnectionCallback);
   mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
 }
+
+void turnOffComms() 
+{
+  publishDeviceOffline();
+  DEBUG_COMMS = false;
+  turnOffMesh();
+  turnOffWifi();
+  DEBUG_GEN = false;
+  turnOffSerial();
+}

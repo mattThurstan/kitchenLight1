@@ -6,7 +6,7 @@ void setupLEDs() {
 
   //FastLED.addLeds<WS2812B, _ledDOut0Pin, GRB>(leds, ledSegment[0].first, ledSegment[4].last).setCorrection( TypicalSMD5050 );
   FastLED.addLeds<WS2812B, _ledDOut0Pin, GRB>(_leds, ledSegment[0].first, ledSegment[4].last).setCorrection( TypicalSMD5050 );
-  FastLED.addLeds<WS2812B, _ledDOut1Pin, GRB>(_leds, ledSegment[5].first, ledSegment[9].last).setCorrection( TypicalSMD5050 );
+  FastLED.addLeds<WS2812B, _ledDOut1Pin, GRB>(_leds, ledSegment[5].first, ledSegment[8].last).setCorrection( TypicalSMD5050 );
 
   _topLedGlobalBrightnessCur = _ledGlobalBrightness;
   _botLedGlobalBrightnessCur = _ledGlobalBrightness;

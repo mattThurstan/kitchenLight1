@@ -219,14 +219,28 @@ void receiveMessage(uint32_t from, String msg)
     else if (msgSub == LIGHTS_OFF) { DEBUG_COMMS = false; }
     publishDebugCommsState(false);
   }
-  else if(targetSub == "debug/reset")  {
-    // don't really need an ON msg but using just to sure it wasn't sent in error
-//    if (msgSub == LIGHTS_ON) { resetDefaults(); }
+  // don't really need an ON msg but using just to sure it wasn't sent in error
+  else if(targetSub == "debug/reset") { if (msgSub == ON) { doReset(); } }
+  else if(targetSub == "debug/restart") 
+  {
+    uint8_t restartTime = msg.toInt();
+    if (restartTime < 0 || restartTime > 255) { return; /* do nothing... */ } 
+    else { doRestart(restartTime); }
   }
-  else if(targetSub == "status/request") {
-    // don't really need an ON msg but using just to sure it wasn't sent in error
-    if (msgSub == LIGHTS_ON) { publishStatusAll(false); } 
+  else if(targetSub == "reset") { if (msgSub == ON) { doReset(); } }
+  else if(targetSub == "restart") 
+  {
+    uint8_t restartTime = msg.toInt();
+    if (restartTime < 0 || restartTime > 255) { return; /* do nothing... */ } 
+    else { doRestart(restartTime); }
   }
+  else if(targetSub == "lockdown") 
+  {
+    uint8_t severity = msg.toInt();
+    if (severity < 0 || severity > 255) { return; /* do nothing... */ } 
+    else { doLockdown(severity); }
+  }
+  else if(targetSub == "status/request") { if (msgSub == ON) { publishStatusAll(false); }  }
   
   if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
 }

@@ -25,22 +25,24 @@
 
 /*----------------------------libraries------------------------*/
 #include <MT_LightControlDefines.h>
-//#include <EEPROM.h>                               // a few saved settings
 #include <FS.h>                                   // file system
 #include <FastLED.h>                              // WS2812B LED strip control and effects
 #include <Wire.h>                                 // include, but do not need to initialise - for DS3231 & CAP1296
 #include "Seeed_MPR121_driver.h"                  // Grove - 12 Key Capacitive I2C Touch Sensor V2 (MPR121) - using edited version
-#include "painlessMesh.h"                         // https://github.com/gmag11/painlessMesh
+#include >painlessMesh.h>                         // https://github.com/gmag11/painlessMesh
 
 /*----------------------------system---------------------------*/
 const String _progName = "kitchenLight1_Mesh";
-const String _progVers = "0.101";                 // tweaks
+const String _progVers = "0.2";                   // emergency protocols
 
-boolean DEBUG_GEN = true;                        // realtime serial debugging output - general
+uint8_t LOCKDOWN_SEVERITY = 0;                    // the severity of the lockdown
+bool LOCKDOWN = false;                            // are we in lockdown?
+
+boolean DEBUG_GEN = false;                        // realtime serial debugging output - general
 boolean DEBUG_OVERLAY = false;                    // show debug overlay on leds (eg. show segment endpoints, center, etc.)
 boolean DEBUG_MESHSYNC = false;                   // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
-boolean DEBUG_COMMS = true;                      // realtime serial debugging output - comms
-boolean DEBUG_USERINPUT = true;                  // realtime serial debugging output - user input
+boolean DEBUG_COMMS = false;                      // realtime serial debugging output - comms
+boolean DEBUG_USERINPUT = false;                  // realtime serial debugging output - user input
 
 boolean _firstTimeSetupDone = false;              // starts false
 bool _shouldSaveSettings = false;                 // flag for saving data
@@ -59,8 +61,8 @@ bool _botIsBreathOverlaid = false;                // toggle for whether breath i
 bool _botIsBreathingSynced = false;               // breath sync local or global
 
 /*----------------------------pins----------------------------*/
-const int _ledDOut0Pin = 4;                       // DOut 0 -> LED strip 0 DIn   - top right
-const int _ledDOut1Pin = 0;                       // DOut 1 -> LED strip 1 DIn   - top left
+const int _ledDOut0Pin = 0;                       // DOut 0 -> LED strip 0 DIn   - top right
+const int _ledDOut1Pin = 4;                       // DOut 1 -> LED strip 1 DIn   - top left
 //const int _ledDOut2Pin = 2;                       // DOut 2 -> LED strip 2 DIn   -
 //const int _ledDOut3Pin = 15;                      // DOut 3 -> LED strip 3 DIn   - SPARE ..for future use
 //const int _ledDOut4Pin = 27;                      // DOut 4 -> LED strip 4 DIn   - SPARE
@@ -101,7 +103,8 @@ u16 touch_status_flag[CHANNEL_NUM] = { 0 };       // u16 = unsigned short
 /*----------------------------LED-----------------------------*/
 // might limit power draw even further if add usb charge ports to the system
 // or use usb chips and change power draw if usb device attached and charging
-#define MAX_POWER_DRAW 3000                       // limit power draw to 5.7A at 5v (with 6A power supply this gives us a bit of head room for board, lights etc.)
+// 137 x 0.02 = 2.74
+#define MAX_POWER_DRAW 3000                       // limit power draw to 3.0A at 5v (with 6A power supply this gives us a bit of head room for board, lights etc.)
 #define UPDATES_PER_SECOND 120                    // main loop FastLED show delay //100
 
 typedef struct {
@@ -110,7 +113,7 @@ typedef struct {
   byte total;
 } LED_SEGMENT;
 
-const uint16_t _ledNum = 136;
+const uint16_t _ledNum = 137;
 const int _segmentTotal = 9;                     // total segments
 
 LED_SEGMENT ledSegment[_segmentTotal] = { 
@@ -118,14 +121,13 @@ LED_SEGMENT ledSegment[_segmentTotal] = {
   { 1, 28, 28 },    //top right 1A
   { 29, 36, 8 },    //top right 1B
   { 37, 44, 8 },    //top right 2A
-  { 45, 72, 28 },   //top right 2B
+  { 45, 72, 28 },   //top right 2B - 72 not working
   { 73, 73, 1 },    //blank for level shifting hack and debug status
-  { 74, 100, 27 },  //top left 1A
-  { 101, 107, 7 },  //top left 1B
-  { 108, 135, 28 }  //top left 2 (window)
+  { 74, 101, 28 },  //top left 1A
+  { 102, 108, 7 },  //top left 1B
+  { 109, 136, 28 }  //top left 2 (window)
 };
                                               
-//CRGB leds[_ledNumOfStrips][_ledNumPerStrip];      // global RGB array matrix
 CRGBArray<_ledNum> _leds;                         // master array - CRGBArray means can do multiple '_leds(0, 2).fadeToBlackBy(40);' as well as single '_leds[0].fadeToBlackBy(40);'
 
 CRGBSet _ledsTopRight( _leds(ledSegment[1].first, ledSegment[4].last) );
@@ -166,6 +168,7 @@ CRGB _topNightColor(64, 64, 64);
 //#define TEMPERATURE_0 WarmFluorescent
 //#define TEMPERATURE_1 StandardFluorescent
 //#define TEMPERATURE_2 CoolWhiteFluorescent
+
 // RGB colours for "Working" colour temperature sub-mode
 CRGB _warmFluorescent(255, 244, 229);  // WarmFluorescent = 0xFFF4E5 - 0 K, 255, 244, 229
 CRGB _standardFluorescent(244, 255, 250); // StandardFluorescent = 0xF4FFFA - 0 K, 244, 255, 250
