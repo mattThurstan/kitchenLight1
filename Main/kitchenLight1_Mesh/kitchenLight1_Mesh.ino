@@ -29,11 +29,11 @@
 #include <FastLED.h>                              // WS2812B LED strip control and effects
 #include <Wire.h>                                 // include, but do not need to initialise - for DS3231 & CAP1296
 #include "Seeed_MPR121_driver.h"                  // Grove - 12 Key Capacitive I2C Touch Sensor V2 (MPR121) - using edited version
-#include >painlessMesh.h>                         // https://github.com/gmag11/painlessMesh
+#include <painlessMesh.h>                         // https://github.com/gmag11/painlessMesh
 
 /*----------------------------system---------------------------*/
 const String _progName = "kitchenLight1_Mesh";
-const String _progVers = "0.2";                   // emergency protocols
+const String _progVers = "0.201";                 // tweaks
 
 uint8_t LOCKDOWN_SEVERITY = 0;                    // the severity of the lockdown
 bool LOCKDOWN = false;                            // are we in lockdown?
