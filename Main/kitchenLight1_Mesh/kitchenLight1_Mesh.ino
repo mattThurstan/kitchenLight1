@@ -33,7 +33,7 @@
 
 /*----------------------------system---------------------------*/
 const String _progName = "kitchenLight1_Mesh";
-const String _progVers = "0.201";                 // tweaks
+const String _progVers = "0.202";                 // PIR
 
 uint8_t LOCKDOWN_SEVERITY = 0;                    // the severity of the lockdown
 bool LOCKDOWN = false;                            // are we in lockdown?
@@ -42,9 +42,11 @@ boolean DEBUG_GEN = false;                        // realtime serial debugging o
 boolean DEBUG_OVERLAY = false;                    // show debug overlay on leds (eg. show segment endpoints, center, etc.)
 boolean DEBUG_MESHSYNC = false;                   // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
 boolean DEBUG_COMMS = false;                      // realtime serial debugging output - comms
+boolean DEBUG_INTERRUPT = false;                  // realtime serial debugging output - interrupt pins
 boolean DEBUG_USERINPUT = false;                  // realtime serial debugging output - user input
 
 boolean _firstTimeSetupDone = false;              // starts false
+bool _dayMode = false;                            // whether or not to run if night or day. default to night just so it works in case something goes wrong.
 bool _shouldSaveSettings = false;                 // flag for saving data
 bool _runonce = true;                             // flag for sending states when first mesh conection
 //const int _mainLoopDelay = 0;                     // just in case  - using FastLED.delay instead..
@@ -69,6 +71,8 @@ const int _ledDOut1Pin = 4;                       // DOut 1 -> LED strip 1 DIn  
 //const int _ledDOut4Pin = 14;                      // DOut 4 -> LED strip 4 DIn   - SPARE
 //const int _ledDOut4Pin = 12;                      // DOut 4 -> LED strip 4 DIn   - SPARE
 //const int _ledDOut4Pin = 13;                      // DOut 4 -> LED strip 4 DIn   - SPARE
+const byte _pirPin = 12;                          // PIR sensor on interrupt pin (triggered on HIGH)
+//const byte _pirPin[2] = { 4, 5 }; // D2, D1       // 2 PIR sensors on interrupt pins (triggered on HIGH)
 
 /*----------------------------modes---------------------------*/
 const int _colorTempNum = 3;                      // 3 for now
@@ -94,6 +98,18 @@ int _botSaveCurMode = 0;
 int _botColorTempCur = 1;                         // current colour temperature
 
 /*----------------------------buttons-------------------------*/
+
+/*----------------------------PIR----------------------------*/
+const unsigned long _pirHoldInterval = 10000; //150000; // 15000=15 sec. 30000=30 sec. 150000=2.5 mins.
+//volatile byte _state = 0;                         // 0-Off, 1-Fade On, 2-On, 3-Fade Off
+//volatile byte _stateSave = 0;                     // temp save state for inside for-loops
+//direction for fade on/off is determined by last pir triggered
+volatile unsigned long _pirHoldPrevMillis = 0;
+//volatile byte _pirLastTriggered = 255;            // last PIR sensor triggered (0=top or 1=bottom)
+volatile boolean _PIRtriggeredTimerRunning = false;           // is the hold timer in use?
+//volatile byte _fadeOnDirection = 255;             // direction for fade on loop. 0=fade down the stairs (top to bot), 1=fade up the stairs (bot to top).
+// crash at boot with ISR not in IRAM error
+//void ICACHE_RAM_ATTR pirInterrupt0();
 
 /*----------------------------touch sensors-------------------*/
 // MPR121 connected via I2C
@@ -225,6 +241,8 @@ void setup() {
   delay(400);
   setupLEDs();                                    // setup the LEDs
   delay(400);
+  setupPIR();
+  delay(400);
   setupUserInputs();                              // setup any direct user input eg. buttons
   delay(400);
   setupMesh();
@@ -252,6 +270,7 @@ void loop() {
     if (DEBUG_GEN) { Serial.print(F("firstTimeSetupDone  = true")); }
   }
 
+  loopPir();
   loopUserInputs();                               // loop direct user input
   loopTopModes();                                 // loop top light modes
   loopBotModes();                                 // loop bottom light modes
@@ -273,4 +292,31 @@ void loop() {
   FastLED.delay(1000 / UPDATES_PER_SECOND);
   //
   //delay(_mainLoopDelay);  //using FastLED.delay instead..
+}
+
+/*----------------------------interrupt callbacks----------------------------*/
+void pirInterrupt0() {
+  if (DEBUG_INTERRUPT) { Serial.println("pirInterrupt0"); }
+  //_pirLastTriggered = 0;
+  pirInterruptPart2();
+}
+
+void pirInterruptPart2() {
+  if (_state == 0 || _state == 3) {
+    if (_dayMode == false) {
+      //_state = 1;                                   // if off or fading down, then fade back up again
+      _topOnOff = true;
+    }
+    //_fadeOnDirection = _pirLastTriggered;
+  }
+  //if (_pirLastTriggered == 0) {
+    //publishSensorBot(true);
+  //  publishSensorBotOn(true);
+  //} else if (_pirLastTriggered == 1) {
+    //publishSensorTop(true);
+  //  publishSensorTopOn(true);
+  //}
+  publishSensorOn(true);
+  _pirHoldPrevMillis = millis();                  // store the current time (reset the timer)
+  _PIRtriggeredTimerRunning = true;               // enable the timer loop in pir
 }

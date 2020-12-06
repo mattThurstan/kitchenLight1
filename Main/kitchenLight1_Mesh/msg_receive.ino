@@ -6,9 +6,23 @@ void receiveMessage(uint32_t from, String msg)
   String msgSub = msg.substring(firstMsgIndex+1);
 // top lights
   if (targetSub == "lights/top/light/switch") {
-    if (msgSub == "ON") { _topOnOff = true; }
-    else if (msgSub == "OFF") { _topOnOff = false; }
+    if (msgSub == LIGHTS_ON) { _topOnOff = true; }
+    else if (msgSub == LIGHTS_OFF) { _topOnOff = false; }
     publishTopState(true);
+  }
+  else if (targetSub == "lights/day/set") {
+    if (msgSub == LIGHTS_ON) { 
+      _dayMode = true;
+      // set mode to a dim one
+      //if (_state == 1 || _state == 2) {
+      //  _state = 3; // fade out - does a 'publish state' from 'loopPir' when finished fade out
+      //}
+    }
+    else if (msgSub == LIGHTS_OFF) { 
+      // normal service is resumed
+      _dayMode = false;
+    }
+    publishDayMode(true);
   }
   else if (targetSub == "lights/top/brightness/set"){
     uint8_t brightness = msgSub.toInt();
@@ -71,8 +85,8 @@ void receiveMessage(uint32_t from, String msg)
   }
 // bottom lights
   else if (targetSub == "lights/bot/light/switch") {
-    if (msgSub == "ON") { _botOnOff = true; }
-    else if (msgSub == "OFF") { _botOnOff = false; }
+    if (msgSub == LIGHTS_ON) { _botOnOff = true; }
+    else if (msgSub == LIGHTS_OFF) { _botOnOff = false; }
     publishBotState(true);
   }
   else if (targetSub == "lights/bot/brightness/set"){

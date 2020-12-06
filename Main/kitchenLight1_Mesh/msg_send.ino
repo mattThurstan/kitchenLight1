@@ -38,6 +38,26 @@ void publishTopMode(bool save) {
   publishMeshMsgSingleString("publishTopMode", "lights/top/mode", _topModeName[_topModeCur], save);
 }
 
+void publishDayMode(bool save) {
+  publishMeshMsgSingleState("publishDayMode", "lights/day/status", _dayMode, save);
+}
+
+// PIR
+void publishSensor(bool save) {
+  //bool onOff;
+  //if (_state == 0 || _state == 3) { onOff = false; } 
+  //else { onOff = true; }
+  publishMeshMsgSingleState("publishSensor", "sensor/status", _topOnOff, save);
+}
+
+void publishSensorOn(bool save) {
+  publishMeshMsgSingleState("publishSensor", "sensor/status", true, save);
+}
+void publishSensorOff(bool save) {
+  publishMeshMsgSingleState("publishSensor", "sensor/status", false, save);
+}
+
+
 // sub-modes
 void publishTopColorTemp(bool save) { }
 void publishTopEffect(bool save) { }
@@ -99,6 +119,9 @@ void publishTopStatusAll(bool save) {
   publishTopEffect(save);
   // publish top effect colours
   publishTopGHue2Cycle(save);
+  
+  publishDayMode(save);
+  publishSensor(save);
 }
 
 void publishBotStatusAll(bool save) {
@@ -111,6 +134,9 @@ void publishBotStatusAll(bool save) {
   publishBotEffect(save);
   // publish bot effect colours
   publishBotGHue2Cycle(save);
+  
+  publishDayMode(save);
+  publishSensor(save);
 }
 
 void publishDebugStatusAll(bool save) {
