@@ -33,7 +33,7 @@
 
 /*----------------------------system---------------------------*/
 const String _progName = "kitchenLight1_Mesh";
-const String _progVers = "0.202";                 // PIR
+const String _progVers = "0.203";                 // PIR cleanup
 
 uint8_t LOCKDOWN_SEVERITY = 0;                    // the severity of the lockdown
 bool LOCKDOWN = false;                            // are we in lockdown?
@@ -69,10 +69,9 @@ const int _ledDOut1Pin = 4;                       // DOut 1 -> LED strip 1 DIn  
 //const int _ledDOut3Pin = 15;                      // DOut 3 -> LED strip 3 DIn   - SPARE ..for future use
 //const int _ledDOut4Pin = 27;                      // DOut 4 -> LED strip 4 DIn   - SPARE
 //const int _ledDOut4Pin = 14;                      // DOut 4 -> LED strip 4 DIn   - SPARE
-//const int _ledDOut4Pin = 12;                      // DOut 4 -> LED strip 4 DIn   - SPARE
 //const int _ledDOut4Pin = 13;                      // DOut 4 -> LED strip 4 DIn   - SPARE
+
 const byte _pirPin = 12;                          // PIR sensor on interrupt pin (triggered on HIGH)
-//const byte _pirPin[2] = { 4, 5 }; // D2, D1       // 2 PIR sensors on interrupt pins (triggered on HIGH)
 
 /*----------------------------modes---------------------------*/
 const int _colorTempNum = 3;                      // 3 for now
@@ -101,13 +100,8 @@ int _botColorTempCur = 1;                         // current colour temperature
 
 /*----------------------------PIR----------------------------*/
 const unsigned long _pirHoldInterval = 10000; //150000; // 15000=15 sec. 30000=30 sec. 150000=2.5 mins.
-//volatile byte _state = 0;                         // 0-Off, 1-Fade On, 2-On, 3-Fade Off
-//volatile byte _stateSave = 0;                     // temp save state for inside for-loops
-//direction for fade on/off is determined by last pir triggered
 volatile unsigned long _pirHoldPrevMillis = 0;
-//volatile byte _pirLastTriggered = 255;            // last PIR sensor triggered (0=top or 1=bottom)
 volatile boolean _PIRtriggeredTimerRunning = false;           // is the hold timer in use?
-//volatile byte _fadeOnDirection = 255;             // direction for fade on loop. 0=fade down the stairs (top to bot), 1=fade up the stairs (bot to top).
 // crash at boot with ISR not in IRAM error
 //void ICACHE_RAM_ATTR pirInterrupt0();
 
@@ -295,27 +289,15 @@ void loop() {
 }
 
 /*----------------------------interrupt callbacks----------------------------*/
-void pirInterrupt0() {
-  if (DEBUG_INTERRUPT) { Serial.println("pirInterrupt0"); }
-  //_pirLastTriggered = 0;
+void pirInterrupt() {
+  if (DEBUG_INTERRUPT) { Serial.println("pirInterrupt"); }
   pirInterruptPart2();
 }
 
 void pirInterruptPart2() {
-  if (_state == 0 || _state == 3) {
-    if (_dayMode == false) {
-      //_state = 1;                                   // if off or fading down, then fade back up again
-      _topOnOff = true;
-    }
-    //_fadeOnDirection = _pirLastTriggered;
+  if (_dayMode == false) {
+    _topOnOff = true;
   }
-  //if (_pirLastTriggered == 0) {
-    //publishSensorBot(true);
-  //  publishSensorBotOn(true);
-  //} else if (_pirLastTriggered == 1) {
-    //publishSensorTop(true);
-  //  publishSensorTopOn(true);
-  //}
   publishSensorOn(true);
   _pirHoldPrevMillis = millis();                  // store the current time (reset the timer)
   _PIRtriggeredTimerRunning = true;               // enable the timer loop in pir
