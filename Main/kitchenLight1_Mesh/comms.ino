@@ -3,7 +3,7 @@ void setupMesh()
 {
   mesh.setDebugMsgTypes( ERROR | STARTUP );       // set before init() so that you can see startup messages
 
-  mesh.init(MESH_NAME, MESH_PASSWORD, MESH_PORT, WIFI_AP_STA, STATION_CHANNEL, 1, 4); // hidden
+  mesh.init(MESH_NAME, MESH_PASSWORD, MESH_PORT, WIFI_AP_STA, STATION_CHANNEL, MESH_NODE_HIDDEN, MESH_NODE_MAX_CONN); // hidden
   
   mesh.setContainsRoot(true);
   mesh.onReceive(&receivedCallback);

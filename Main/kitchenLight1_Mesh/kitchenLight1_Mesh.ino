@@ -1,6 +1,6 @@
 /*
     'kitchenLight1_Mesh' by Thurstan. PIR triggered LED strips.
-    Copyright (C) 2020 MTS Standish (Thurstan|mattKsp)
+    Copyright (C) 2021 MTS Standish (Thurstan|mattKsp)
     
     A does one side of the kitchen and B does the other side.
     Each side has LED strips above the units and lights below the units, operated seperately. 
@@ -27,42 +27,44 @@
 #include <MT_LightControlDefines.h>
 #include <FS.h>                                   // file system
 #include <FastLED.h>                              // WS2812B LED strip control and effects
-#include <Wire.h>                                 // include, but do not need to initialise - for DS3231 & CAP1296
 #include "Seeed_MPR121_driver.h"                  // Grove - 12 Key Capacitive I2C Touch Sensor V2 (MPR121) - using edited version
 #include <painlessMesh.h>                         // https://github.com/gmag11/painlessMesh
 
 /*----------------------------system---------------------------*/
 const String _progName = "kitchenLight1_Mesh";
-const String _progVers = "0.203";                 // PIR cleanup
+const String _progVers = "0.204";                 // 
 
 uint8_t LOCKDOWN_SEVERITY = 0;                    // the severity of the lockdown
 bool LOCKDOWN = false;                            // are we in lockdown?
 
-boolean DEBUG_GEN = false;                        // realtime serial debugging output - general
-boolean DEBUG_OVERLAY = false;                    // show debug overlay on leds (eg. show segment endpoints, center, etc.)
-boolean DEBUG_MESHSYNC = false;                   // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
-boolean DEBUG_COMMS = false;                      // realtime serial debugging output - comms
-boolean DEBUG_INTERRUPT = false;                  // realtime serial debugging output - interrupt pins
-boolean DEBUG_USERINPUT = false;                  // realtime serial debugging output - user input
+bool DEBUG_GEN = false;                           // realtime serial debugging output - general
+bool DEBUG_OVERLAY = false;                       // show debug overlay on leds (eg. show segment endpoints, center, etc.)
+bool DEBUG_MESHSYNC = false;                      // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
+bool DEBUG_COMMS = false;                         // realtime serial debugging output - comms
+bool DEBUG_INTERRUPT = false;                     // realtime serial debugging output - interrupt pins
+bool DEBUG_USERINPUT = false;                     // realtime serial debugging output - user input
 
-boolean _firstTimeSetupDone = false;              // starts false
+bool _firstTimeSetupDone = false;                 // starts false
 bool _dayMode = false;                            // whether or not to run if night or day. default to night just so it works in case something goes wrong.
 bool _shouldSaveSettings = false;                 // flag for saving data
 bool _runonce = true;                             // flag for sending states when first mesh conection
 //const int _mainLoopDelay = 0;                     // just in case  - using FastLED.delay instead..
 
 // top lights
-volatile boolean _topOnOff = false;               // top lights on/off true/false - this should init false, then get activated by input
+//volatile boolean _topOnOff = false;               // top lights on/off true/false - this should init false, then get activated by input
+volatile bool _topOnOff = false;
 bool _topIsBreathing = false;                     // toggle for breath
 bool _topIsBreathOverlaid = false;                // toggle for whether breath is overlaid on top of modes
 bool _topIsBreathingSynced = false;               // breath sync local or global
 // bottom lights
-volatile boolean _botOnOff = false;               // bottom lights on/off true/false - this should init false, then get activated by input
+//volatile boolean _botOnOff = false;               // bottom lights on/off true/false - this should init false, then get activated by input
+volatile bool _botOnOff = false;
 bool _botIsBreathing = false;                     // toggle for breath
 bool _botIsBreathOverlaid = false;                // toggle for whether breath is overlaid on top of modes
 bool _botIsBreathingSynced = false;               // breath sync local or global
 
 /*----------------------------pins----------------------------*/
+//5v regulated power is connected to USB (VBUS)
 const int _ledDOut0Pin = 0;                       // DOut 0 -> LED strip 0 DIn   - top right
 const int _ledDOut1Pin = 4;                       // DOut 1 -> LED strip 1 DIn   - top left
 //const int _ledDOut2Pin = 2;                       // DOut 2 -> LED strip 2 DIn   -
@@ -101,7 +103,7 @@ int _botColorTempCur = 1;                         // current colour temperature
 /*----------------------------PIR----------------------------*/
 const unsigned long _pirHoldInterval = 10000; //150000; // 15000=15 sec. 30000=30 sec. 150000=2.5 mins.
 volatile unsigned long _pirHoldPrevMillis = 0;
-volatile boolean _PIRtriggeredTimerRunning = false;           // is the hold timer in use?
+volatile bool _PIRtriggeredTimerRunning = false;  // is the hold timer in use?
 // crash at boot with ISR not in IRAM error
 //void ICACHE_RAM_ATTR pirInterrupt0();
 
@@ -186,7 +188,7 @@ CRGB _coolWhiteFluorescent(212, 235, 255); // CoolWhiteFluorescent = 0xD4EBFF - 
 
 /*----------------------------Mesh----------------------------*/
 painlessMesh  mesh;                               // initialise
-uint32_t id = DEVICE_ID_BRIDGE1;
+uint32_t id_bridge1 = DEVICE_ID_BRIDGE1;
 
 void receivedCallback(uint32_t from, String &msg ) {
   if (DEBUG_COMMS) { Serial.printf("kitchenLight1_Mesh: Received from %u msg=%s\n", from, msg.c_str()); }
