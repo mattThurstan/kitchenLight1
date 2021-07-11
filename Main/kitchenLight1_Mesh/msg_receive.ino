@@ -254,6 +254,11 @@ void receiveMessage(uint32_t from, String msg)
     if (severity < 0 || severity > 255) { return; /* do nothing... */ } 
     else { doLockdown(severity); }
   }
+  else if(targetSub == "channel")
+  {
+    uint8_t channel = msg.toInt();
+    changeChannel(channel);
+  }
   else if(targetSub == "status/request") { if (msgSub == ON) { publishStatusAll(false); }  }
   
   if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }

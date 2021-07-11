@@ -154,3 +154,8 @@ void publishStatusAll(bool save) {
   
   publishDebugStatusAll(save);
 }
+
+void publishDeviceOffline() {
+  publishMeshMsgSingleState("publishState", "status", OFF, false);
+  publishMeshMsgSingleState("publishState", "available", "offline", false);
+}

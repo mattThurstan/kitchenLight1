@@ -14,6 +14,16 @@ void setupLEDs() {
   FastLED.setTemperature(UncorrectedTemperature);   //set first temperature
 }
 
+/*----------------------------loop led----------------------------*/
+void loopLED() {
+  topGHueRotate();                                // top lights hue rotate for effects mode
+  botGHueRotate();                                // bootom lights hue rotate for effects mode
+  
+  FastLED.show();                             // send all the data to the strips
+  FastLED.delay(1000 / UPDATES_PER_SECOND);
+}
+
+/*----------------------------led helpers----------------------------*/
 
 /*
  * Increment gHue by 0.1 every N milliseconds

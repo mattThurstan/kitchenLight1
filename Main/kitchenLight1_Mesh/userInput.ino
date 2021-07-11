@@ -1,5 +1,6 @@
 /*----------------------------user input----------------------------*/
 boolean _touchActive = false;
+
 void setupUserInputs() {
   s32 ret = 0;                                // s32 = int
   if(mpr121.begin() < 0)
@@ -9,6 +10,9 @@ void setupUserInputs() {
   }
   else
   {
+    mpr121.set_globle_param(0xDB20);
+    mpr121.set_debounce(0X44);
+    //mpr121.set_threshold();
     _touchActive = true;
     if (DEBUG_USERINPUT) { Serial.println("MPR121 device init OK!"); }
   }
@@ -89,6 +93,12 @@ void touchSensorsMPR121() {
           Serial.print("Touch ");
           Serial.print(i);
           Serial.println(" pressed.");
+          
+          Serial.print("filtered_data_buf ");
+          Serial.println(filtered_data_buf[i]);
+          Serial.print("baseline_buf ");
+          Serial.println(baseline_buf[i]);
+          
         }
       } // end if touch status flag 0
     } // end if result
@@ -102,6 +112,12 @@ void touchSensorsMPR121() {
           Serial.print("Touch ");
           Serial.print(i);
           Serial.println(" released.");
+          
+          Serial.print("filtered_data_buf ");
+          Serial.println(filtered_data_buf[i]);
+          Serial.print("baseline_buf ");
+          Serial.println(baseline_buf[i]);
+          
         }
       } // end  if touch status flag 1
     } // end else result
